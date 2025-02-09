@@ -7,8 +7,10 @@ import (
 	"strings"
 )
 
-func ViewLogs() {
-	data, err := os.ReadFile(logFile)
+func ViewLogs(logFileName string) {
+	// func ViewLogs() {
+	// 	data, err := os.ReadFile(logFile)
+	data, err := os.ReadFile(logFileName)
 	if err != nil {
 		log.Println("Error reading logs:", err)
 		return
@@ -16,8 +18,10 @@ func ViewLogs() {
 	log.Println("LOG FILE CONTENT:\n", string(data))
 }
 
-func FilterLogs(filter string) {
-	data, err := os.ReadFile(logFile)
+func FilterLogs(logFileName, filter string) {
+	// func FilterLogs(filter string) {
+	// 	data, err := os.ReadFile(logFile)
+	data, err := os.ReadFile(logFileName)
 	if err != nil {
 		log.Println("Error reading logs:", err)
 		return
