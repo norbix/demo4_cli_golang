@@ -49,10 +49,6 @@ Demo application containing a CLI solution in pure Golang and the application is
     │        └── cli
     │            └── cli_commands.go  # CLI commands implementation (user interaction)
     └── core                # Core application logic (Domain Layer)
-        ├── domain
-        │       └── log_entry.go      # Data model representing log entries
-        ├── ports
-        │       └── log_repository.go # Interface defining log repository interactions
         └── service
             ├── file_monitor.go      # File monitoring service (watching file system events)
             ├── file_monitor_test.go # Unit tests for file monitoring service
