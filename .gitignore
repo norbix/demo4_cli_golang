@@ -26,3 +26,12 @@ go.work.sum
 
 # Build directory
 bin/
+
+# Ingest directory
+./hot
+
+# Egest directory
+./backup
+
+# Hack directory
+hack/
