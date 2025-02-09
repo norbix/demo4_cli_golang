@@ -55,19 +55,33 @@ func StartMonitoring() {
 func processEvent(event fsnotify.Event) {
 	fileName := filepath.Base(event.Name)
 
-	if event.Op&fsnotify.Create == fsnotify.Create || event.Op&fsnotify.Write == fsnotify.Write {
+	switch {
+	case event.Op&fsnotify.Create == fsnotify.Create:
+		log.Println("File created:", event.Name)
+		logAction("CREATED", event.Name)
 		if strings.HasPrefix(fileName, "delete_") {
 			deleteFile(event.Name)
 		} else {
 			backupFile(event.Name)
 		}
-	}
 
-	if event.Op&fsnotify.Rename == fsnotify.Rename {
-		log.Println("File renamed:", event.Name)
+	case event.Op&fsnotify.Write == fsnotify.Write:
+		log.Println("File modified:", event.Name)
+		logAction("MODIFIED", event.Name)
 		if strings.HasPrefix(fileName, "delete_") {
 			deleteFile(event.Name)
+		} else {
+			backupFile(event.Name)
 		}
+
+	case event.Op&fsnotify.Remove == fsnotify.Remove:
+		log.Println("File deleted:", event.Name)
+		logAction("DELETED", event.Name)
+
+	case event.Op&fsnotify.Rename == fsnotify.Rename:
+		log.Println("File renamed:", event.Name)
+		logAction("RENAMED", event.Name)
+		renameFile(event.Name)
 	}
 }
 
@@ -89,11 +103,18 @@ func backupFile(filePath string) {
 
 func deleteFile(filePath string) {
 	hotPath := filepath.Join(hotFolder, filepath.Base(filePath))
-	backupPathWithoutPrefix := strings.Replace(filePath, "delete_", "", 1)
-	backupPath := filepath.Join(backupFolder, filepath.Base(backupPathWithoutPrefix)+".bak")
+	hotPathWithoutPrefix := strings.Replace(hotPath, "delete_", "", 1)
+	backupPath := filepath.Join(backupFolder, filepath.Base(hotPathWithoutPrefix)+".bak")
 
 	if exists, _ := afero.Exists(fs, hotPath); exists {
 		if err := fs.Remove(hotPath); err != nil {
+			log.Println("Error deleting file with 'delete_' prefix from hot folder:", err)
+			// log.error("Error deleting file from hot folder:", err)
+		}
+	}
+
+	if exists, _ := afero.Exists(fs, hotPathWithoutPrefix); exists {
+		if err := fs.Remove(hotPathWithoutPrefix); err != nil {
 			log.Println("Error deleting file from hot folder:", err)
 		}
 	}
@@ -105,6 +126,20 @@ func deleteFile(filePath string) {
 	}
 
 	logAction("DELETE", filePath)
+}
+
+// implement renameFile that will delete the previous file and create a new file with the same content
+func renameFile(filePath string) {
+	hotPath := filepath.Join(hotFolder, filepath.Base(filePath))
+	backupPath := filepath.Join(backupFolder, filepath.Base(hotPath)+".bak")
+
+	// delete the file
+	if err := fs.Remove(backupPath); err != nil {
+		log.Println("Error deleting file from backup folder:", err)
+		return
+	}
+
+	logAction("RENAME", filePath)
 }
 
 func logAction(action, filePath string) {
