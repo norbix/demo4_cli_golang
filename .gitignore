@@ -32,3 +32,6 @@ bin/
 
 # Egest directory
 ./backup
+
+# Hack directory
+hack/
