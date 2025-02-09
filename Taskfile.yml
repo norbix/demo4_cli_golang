@@ -1,0 +1,33 @@
+---
+# HINT: (API docs) https://taskfile.dev
+# HINT: (Pragmatic use cases) https://tsh.io/blog/taskfile-or-gnu-make-for-automation/
+
+version: 3
+
+includes:
+  build: ./Taskfile_{{OS}}.yml
+
+silent: true
+
+output: 'interleaved'
+
+# NOTE: contract init via dot env files
+dotenv: ['.env', '{{.HOME}}/.env']
+
+tasks:
+  default:
+    label: 'default'
+    desc: 'List all commands defined.'
+    summary: |
+      Orchestrates execution of other tasks implemented per OS platform.
+
+      It will provision a component/solution or execute a workflow in an automatic fashion.
+    cmds:
+      - 'echo =='
+      - 'echo Tasks available for this {{.kube_type}} Kube.'
+      - 'echo'
+      - 'task -l'
+    # Hint: signature
+    vars:
+      kube_type: 'infra'
+...
