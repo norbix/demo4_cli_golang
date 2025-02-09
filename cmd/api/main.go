@@ -1,17 +1,9 @@
 package main
 
 import (
-	"log"
-	"time"
+	"github.com/norbix/demo4_cli_golang/cmd"
 )
 
 func main() {
-	i := 0
-	j := 10
-
-	for i < j {
-		log.Printf("[%dof%d] Hello, World!", i, j)
-		time.Sleep(1 * time.Second)
-		i++
-	}
+	cmd.Execute()
 }
