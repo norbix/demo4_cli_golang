@@ -8,13 +8,20 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/afero"
 )
 
 var (
 	hotFolder    = "./hot"
 	backupFolder = "./backup"
 	logFile      = "demo4_cli_golang.out"
+
+	fs = afero.NewOsFs() // Default to real filesystem, but we can override for tests
 )
+
+func SetFileSystem(newFs afero.Fs) {
+	fs = newFs
+}
 
 func StartMonitoring() {
 	watcher, err := fsnotify.NewWatcher()
@@ -66,13 +73,13 @@ func processEvent(event fsnotify.Event) {
 
 func backupFile(filePath string) {
 	dest := filepath.Join(backupFolder, filepath.Base(filePath)+".bak")
-	input, err := os.ReadFile(filePath)
+	input, err := afero.ReadFile(fs, filePath)
 	if err != nil {
 		log.Println("Error reading file:", err)
 		return
 	}
 
-	if err := os.WriteFile(dest, input, 0644); err != nil {
+	if err := afero.WriteFile(fs, dest, input, 0644); err != nil {
 		log.Println("Error creating backup:", err)
 		return
 	}
@@ -82,16 +89,17 @@ func backupFile(filePath string) {
 
 func deleteFile(filePath string) {
 	hotPath := filepath.Join(hotFolder, filepath.Base(filePath))
-	backupPath := filepath.Join(backupFolder, filepath.Base(filePath)+".bak")
+	backupPathWithoutPrefix := strings.Replace(filePath, "delete_", "", 1)
+	backupPath := filepath.Join(backupFolder, filepath.Base(backupPathWithoutPrefix)+".bak")
 
-	if _, err := os.Stat(hotPath); err == nil {
-		if err := os.Remove(hotPath); err != nil {
+	if exists, _ := afero.Exists(fs, hotPath); exists {
+		if err := fs.Remove(hotPath); err != nil {
 			log.Println("Error deleting file from hot folder:", err)
 		}
 	}
 
-	if _, err := os.Stat(backupPath); err == nil {
-		if err := os.Remove(backupPath); err != nil {
+	if exists, _ := afero.Exists(fs, backupPath); exists {
+		if err := fs.Remove(backupPath); err != nil {
 			log.Println("Error deleting file from backup folder:", err)
 		}
 	}
@@ -101,12 +109,16 @@ func deleteFile(filePath string) {
 
 func logAction(action, filePath string) {
 	logEntry := time.Now().Format("2006-01-02 15:04:05") + " " + action + " " + filePath + "\n"
-	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
+	file, err := fs.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Println("Error writing log:", err)
 		return
 	}
 	defer file.Close()
 
-	file.WriteString(logEntry)
+	_, err = file.WriteString(logEntry)
+	if err != nil {
+		log.Println("Error writing log entry:", err)
+	}
 }
