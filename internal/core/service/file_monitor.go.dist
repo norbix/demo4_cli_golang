@@ -109,7 +109,6 @@ func deleteFile(filePath string) {
 	if exists, _ := afero.Exists(fs, hotPath); exists {
 		if err := fs.Remove(hotPath); err != nil {
 			log.Println("Error deleting file with 'delete_' prefix from hot folder:", err)
-			// log.error("Error deleting file from hot folder:", err)
 		}
 	}
 
