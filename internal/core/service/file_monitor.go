@@ -42,8 +42,9 @@ func saveState(state AppState) {
 }
 
 func loadState() AppState {
-	state := AppState{Files: make(map[string]time.Time)}
+	var state AppState
 	if exists, _ := afero.Exists(fs, stateFile); !exists {
+		state := AppState{Files: make(map[string]time.Time)}
 		return state
 	}
 
@@ -98,7 +99,6 @@ func processEvent(event fsnotify.Event, state *AppState) {
 	case event.Op&fsnotify.Create == fsnotify.Create:
 		log.Println("File created:", event.Name)
 		logAction("CREATED", event.Name)
-		// state.Files[event.Name] = time.Now()
 		if strings.HasPrefix(fileName, "delete_") {
 			deleteFile(event.Name)
 		} else {
